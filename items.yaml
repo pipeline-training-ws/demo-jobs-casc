@@ -1,0 +1,821 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+- kind: pipeline
+  name: 00-HeloWorld
+  concurrentBuild: true
+  definition:
+    cpsFlowDefinition:
+      sandbox: true
+      script: |
+        pipeline {
+            agent none
+
+            stages {
+                stage('Hello') {
+                    steps {
+                        echo 'Hello World'
+                    }
+                }
+            }
+        }
+  description: ''
+  disabled: false
+  displayName: 00-HeloWorld
+  resumeBlocked: false
+- kind: pipeline
+  name: 01-pipeline-simple
+  concurrentBuild: true
+  definition:
+    cpsScmFlowDefinition:
+      scriptPath: Jenkinsfile
+      scm:
+        scmGit:
+          userRemoteConfigs:
+          - userRemoteConfig:
+              credentialsId: gh-pat
+              url: https://github.com/pipeline-training-ws/sample-app-helloworld.git
+          branches:
+          - branchSpec:
+              name: '*/main'
+      lightweight: true
+  description: ''
+  disabled: false
+  displayName: 01-pipeline-simple
+  properties:
+  - buildDiscarder:
+      strategy:
+        logRotator:
+          removeLastBuild: false
+          artifactDaysToKeep: -1
+          artifactNumToKeep: -1
+          daysToKeep: -1
+          numToKeep: 5
+  - durabilityHint:
+      hint: PERFORMANCE_OPTIMIZED
+  resumeBlocked: false
+- kind: multibranch
+  name: 02-MultiBranchJob-HelloWorld
+  description: sample-app-helloworld
+  displayName: 02-MultiBranchJob-HelloWorld
+  orphanedItemStrategy:
+    defaultOrphanedItemStrategy:
+      pruneDeadBranches: true
+      daysToKeep: -1
+      numToKeep: -1
+      abortBuilds: false
+  projectFactory:
+    workflowBranchProjectFactory:
+      scriptPath: Jenkinsfile
+  properties:
+  - envVars: {}
+  sourcesList:
+  - branchSource:
+      buildStrategies:
+      - skipInitialBuildOnFirstIndexingResetRevision: {}
+      source:
+        github:
+          apiUri: https://api.github.com
+          traits:
+          - gitHubBranchDiscovery:
+              strategyId: 1
+          - gitHubPullRequestDiscovery:
+              strategyId: 2
+          - gitHubForkDiscovery:
+              trust:
+                gitHubTrustPermissions: {}
+              strategyId: 2
+          - cloudBeesSCMReporting:
+              visibleLinesOnly: false
+              handlers:
+              - pipelinePolicies: {}
+              - endBuildError:
+                  maxLogLines: 100
+              - stage:
+                  verbosity:
+                    all: {}
+              - junit: {}
+          repoOwner: pipeline-training-ws
+          credentialsId: gh-app
+          id: '1'
+          repository: sample-app-helloworld
+          configuredByUrl: true
+          repositoryUrl: https://github.com/pipeline-training-ws/sample-app-helloworld.git
+      strategy:
+        allBranchesSame: {}
+  trigger:
+    periodicFolderTrigger:
+      interval: 1h
+- kind: multibranch
+  name: 02-MultiBranchJob-HelloWorld-customMarker
+  description: sample-app-helloworld
+  displayName: 02-MultiBranchJob-HelloWorld-customMarker
+  orphanedItemStrategy:
+    defaultOrphanedItemStrategy:
+      pruneDeadBranches: true
+      daysToKeep: -1
+      numToKeep: -1
+      abortBuilds: false
+  projectFactory:
+    customBranchProjectFactory:
+      marker: ci-config.yaml
+      definition:
+        cpsScmFlowDefinition:
+          scriptPath: templates/1-helloWorld-MB/Jenkinsfile
+          scm:
+            scmGit:
+              userRemoteConfigs:
+              - userRemoteConfig:
+                  credentialsId: gh-pat
+                  url: https://github.com/pipeline-training-ws/template-catalog.git
+              branches:
+              - branchSpec:
+                  name: '*/main'
+          lightweight: true
+  properties:
+  - envVars: {}
+  sourcesList:
+  - branchSource:
+      buildStrategies:
+      - skipInitialBuildOnFirstIndexingResetRevision: {}
+      source:
+        github:
+          apiUri: https://api.github.com
+          traits:
+          - gitHubBranchDiscovery:
+              strategyId: 1
+          - gitHubPullRequestDiscovery:
+              strategyId: 2
+          - gitHubForkDiscovery:
+              trust:
+                gitHubTrustPermissions: {}
+              strategyId: 2
+          - cloudBeesSCMReporting:
+              visibleLinesOnly: false
+              handlers:
+              - pipelinePolicies: {}
+              - endBuildError:
+                  maxLogLines: 100
+              - stage:
+                  verbosity:
+                    all: {}
+              - junit: {}
+          repoOwner: pipeline-training-ws
+          credentialsId: gh-app
+          id: '1'
+          repository: sample-app-helloworld
+          configuredByUrl: true
+          repositoryUrl: https://github.com/pipeline-training-ws/sample-app-helloworld.git
+      strategy:
+        allBranchesSame: {}
+  trigger:
+    periodicFolderTrigger:
+      interval: 1h
+- kind: organizationFolder
+  name: 03-GitHub-Organisation
+  buildStrategies:
+  - skipInitialBuildOnFirstIndexingResetRevision: {}
+  displayName: 03-GitHub-Organisation
+  navigators:
+  - github:
+      enableAvatar: false
+      apiUri: https://api.github.com
+      traits:
+      - gitHubBranchDiscovery:
+          strategyId: 3
+      - gitHubPullRequestDiscovery:
+          strategyId: 2
+      - gitHubForkDiscovery:
+          trust:
+            gitHubTrustPermissions: {}
+          strategyId: 2
+      - cloudBeesSCMReporting:
+          visibleLinesOnly: false
+          handlers:
+          - pipelinePolicies: {}
+          - endBuildError:
+              maxLogLines: 100
+          - stage:
+              verbosity:
+                all: {}
+          - junit: {}
+      repoOwner: pipeline-training-ws
+      credentialsId: gh-app
+  orphanedItemStrategy:
+    defaultOrphanedItemStrategy:
+      pruneDeadBranches: true
+      daysToKeep: -1
+      numToKeep: -1
+      abortBuilds: false
+  projectFactories:
+  - customMultiBranchProjectFactory:
+      factory:
+        customBranchProjectFactory:
+          marker: ci-config.yaml
+          definition:
+            cpsScmFlowDefinition:
+              scriptPath: templates/1-helloWorld-MB/Jenkinsfile
+              scm:
+                scmGit:
+                  userRemoteConfigs:
+                  - userRemoteConfig:
+                      credentialsId: gh-pat
+                      url: https://github.com/pipeline-training-ws/template-catalog.git
+                  branches:
+                  - branchSpec:
+                      name: '*/main'
+              lightweight: true
+  - customMultiBranchProjectFactory:
+      factory:
+        customBranchProjectFactory:
+          marker: ci-config-1.yaml
+          definition:
+            cpsFlowDefinition:
+              sandbox: true
+              script: |
+                pipeline {
+                    agent none
+
+                    stages {
+                        stage('Hello') {
+                            steps {
+                                echo 'Hello World'
+                            }
+                        }
+                    }
+                }
+  properties:
+  - organizationChildHealthMetricsProperty:
+      templates:
+      - namedChildHealthMetric:
+          childName: ''
+      - worstChildHealthMetric:
+          recursive: true
+      - averageChildHealthMetric: {}
+      - jobStatusHealthMetric:
+          unstable: true
+          countVirginJobs: false
+          failure: true
+          success: true
+          unbuilt: true
+      - projectEnabledHealthMetric: {}
+  - organizationChildOrphanedItemsProperty:
+      strategy:
+        inherit: {}
+  - organizationChildTriggersProperty:
+      templates:
+      - periodicFolderTrigger:
+          interval: 1d
+  - envVars: {}
+  - suppressFolderAutomaticTriggering:
+      strategy: NONE
+      branches: .*
+  strategy:
+    allBranchesSame: {}
+  trigger:
+    periodicFolderTrigger:
+      interval: 1d
+- kind: cloudbeesTemplatedJob
+  catalog: Pipeline Template Catalog Examples
+  name: 05-PTC-job-MB
+  model: Pipeline-Tem.c3qk18.log-Examples/1-helloWorld-MB
+  attributes:
+  - type: CREDENTIALS
+    value: gh-app
+    key: githubToken
+  - type: string
+    value: sample-app-helloWorld
+    key: repoName
+  - type: string
+    value: pipeline-training-ws
+    key: organisation
+- kind: folder
+  name: 06-parallel-samples
+  description: ''
+  displayName: 06-parallel-samples
+  items:
+  - kind: pipeline
+    name: agent-global
+    concurrentBuild: true
+    definition:
+      cpsFlowDefinition:
+        sandbox: true
+        script: |
+          // Pattern: GLOBAL AGENT (Monolith)
+          // A single Kubernetes pod is provisioned for the entire pipeline run.
+          // Both parallel branches execute inside sibling containers of that ONE pod,
+          // sharing the same workspace volume (emptyDir) and the same pod-level
+          // resource envelope (requests/limits apply once, for the whole pod).
+          pipeline {
+              agent {
+                  kubernetes {
+                      yaml '''
+          apiVersion: v1
+          kind: Pod
+          spec:
+            nodeSelector:
+              workload: agent
+            tolerations:
+            - key: workload
+              operator: Equal
+              value: agent
+              effect: NoSchedule
+            securityContext:
+              fsGroup: 1000
+            containers:
+            - name: maven
+              image: maven:3.9.9-eclipse-temurin-21
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: "512Mi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              securityContext:
+                runAsUser: 1000
+            - name: node
+              image: node:20-alpine
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: "512Mi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              securityContext:
+                runAsUser: 1000
+          '''
+                  }
+              }
+              stages {
+                  stage('Parallel Build') {
+                      parallel {
+                          stage('Backend') {
+                              steps {
+                                  container('maven') {
+                                      sh 'mvn -version'
+                                  }
+                              }
+                          }
+                          stage('Frontend') {
+                              steps {
+                                  container('node') {
+                                      // Same shared workspace as the Backend branch above
+                                      sh 'node -v'
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+    description: ''
+    disabled: false
+    displayName: agent-global
+    resumeBlocked: false
+  - kind: pipeline
+    name: agent-per-stage
+    concurrentBuild: true
+    definition:
+      cpsFlowDefinition:
+        sandbox: true
+        script: |
+          // Pattern: STAGE-SPECIFIC AGENT (Distributed)
+          // No top-level agent is provisioned (agent none). Each parallel branch
+          // requests its OWN Kubernetes pod, sized and specced only for that branch's
+          // workload. Jenkins schedules the two pods independently, potentially on
+          // different nodes, and each gets an isolated workspace/volume.
+          pipeline {
+              agent none
+              stages {
+                  stage('Parallel Build') {
+                      parallel {
+                          stage('Backend') {
+                              agent {
+                                  kubernetes {
+                                      yaml '''
+          apiVersion: v1
+          kind: Pod
+          spec:
+            nodeSelector:
+              workload: agent
+            tolerations:
+            - key: workload
+              operator: Equal
+              value: agent
+              effect: NoSchedule
+            securityContext:
+              fsGroup: 1000
+            containers:
+            - name: maven
+              image: maven:3.9.9-eclipse-temurin-21
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: "1Gi"
+                limits:
+                  cpu: "2"
+                  memory: "2Gi"
+              securityContext:
+                runAsUser: 1000
+          '''
+                                  }
+                              }
+                              steps {
+                                  container('maven') {
+                                      sh 'mvn -version'
+                                  }
+                              }
+                          }
+                          stage('Frontend') {
+                              agent {
+                                  kubernetes {
+                                      yaml '''
+          apiVersion: v1
+          kind: Pod
+          spec:
+            nodeSelector:
+              workload: agent
+            tolerations:
+            - key: workload
+              operator: Equal
+              value: agent
+              effect: NoSchedule
+            securityContext:
+              fsGroup: 1000
+            containers:
+            - name: node
+              image: node:20-alpine
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: "512Mi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              securityContext:
+                runAsUser: 1000
+          '''
+                                  }
+                              }
+                              steps {
+                                  container('node') {
+                                      sh 'node -v'
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+    description: ''
+    disabled: false
+    displayName: agent-per-stage
+    resumeBlocked: false
+  properties:
+  - envVars: {}
+  - itemRestrictions:
+      filter: false
+- kind: folder
+  name: 07-crossteam-collaboration-events
+  description: ''
+  displayName: 07-crossteam-collaboration-events
+  items:
+  - kind: pipeline
+    name: Event-consumer-1
+    concurrentBuild: true
+    definition:
+      cpsFlowDefinition:
+        sandbox: true
+        script: |-
+          pipeline {
+              agent {
+                  kubernetes {
+                      yaml '''
+          apiVersion: v1
+          kind: Pod
+          spec:
+            nodeSelector:
+              workload: agent
+            tolerations:
+            - key: workload
+              operator: Equal
+              value: agent
+              effect: NoSchedule
+            securityContext:
+              fsGroup: 1000
+            containers:
+            - name: curl
+              image: curlimages/curl:8.10.1
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "250m"
+                  memory: "256Mi"
+              securityContext:
+                runAsUser: 1000
+          '''
+                  }
+              }
+              triggers {
+                  eventTrigger jmespathQuery("contains(event, 'com.example:') && contains(event, '-SNAPSHOT')")
+              }
+
+              stages {
+                  stage('Example') {
+                      steps {
+                          container("curl") {
+                              echo "called"
+                          }
+                      }
+                  }
+              }
+          }
+    description: ''
+    disabled: false
+    displayName: Event-consumer-1
+    properties:
+    - pipelineTriggers:
+        triggers:
+        - eventTrigger:
+            condition:
+              jmespathQuery:
+                query: contains(event, 'com.example:') && contains(event, '-SNAPSHOT')
+    resumeBlocked: false
+  - kind: pipeline
+    name: Event-consumer-2
+    concurrentBuild: true
+    definition:
+      cpsFlowDefinition:
+        sandbox: true
+        script: |-
+          pipeline {
+              agent {
+                  kubernetes {
+                      yaml '''
+          apiVersion: v1
+          kind: Pod
+          spec:
+            nodeSelector:
+              workload: agent
+            tolerations:
+            - key: workload
+              operator: Equal
+              value: agent
+              effect: NoSchedule
+            securityContext:
+              fsGroup: 1000
+            containers:
+            - name: curl
+              image: curlimages/curl:8.10.1
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "250m"
+                  memory: "256Mi"
+              securityContext:
+                runAsUser: 1000
+          '''
+                  }
+              }
+              triggers {
+                  eventTrigger jmespathQuery("contains(event, 'com.example:') && contains(event, '-SNAPSHOT')")
+              }
+
+              stages {
+                  stage('Example') {
+                      steps {
+                          container("curl") {
+                              echo "called"
+                          }
+                      }
+                  }
+              }
+          }
+    description: ''
+    disabled: false
+    displayName: Event-consumer-2
+    properties:
+    - pipelineTriggers:
+        triggers:
+        - eventTrigger:
+            condition:
+              jmespathQuery:
+                query: contains(event, 'com.example:') && contains(event, '-SNAPSHOT')
+    resumeBlocked: false
+  - kind: pipeline
+    name: Event-producer
+    concurrentBuild: true
+    definition:
+      cpsFlowDefinition:
+        sandbox: true
+        script: |-
+          pipeline {
+              agent {
+                  kubernetes {
+                      yaml '''
+          apiVersion: v1
+          kind: Pod
+          spec:
+            nodeSelector:
+              workload: agent
+            tolerations:
+            - key: workload
+              operator: Equal
+              value: agent
+              effect: NoSchedule
+            securityContext:
+              fsGroup: 1000
+            containers:
+            - name: maven
+              image: maven:3.9.9-eclipse-temurin-21
+              command:
+              - sleep
+              args:
+              - infinity
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: "512Mi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              securityContext:
+                runAsUser: 1000
+          '''
+                  }
+              }
+              stages {
+
+                  stage("notify") {
+                      steps {
+                          container("maven") {
+                              //  publishEvent event:jsonEvent('{"eventName":"helloWorld"}'), verbose: true
+                              publishEvent event: jsonEvent('{"event":"com.example:supply-chain-webapp:1.2-SNAPSHOT:war","mavenArtifact":{"groupId":"com.example", "artifactId":"cloudbees-jar", "version":"0.5-SNAPSHOT"}} '), verbose: true
+                          }
+                      }
+                  }
+              }
+          }
+    description: ''
+    disabled: false
+    displayName: Event-producer
+    resumeBlocked: false
+  properties:
+  - envVars: {}
+  - itemRestrictions:
+      filter: false
+- kind: pipeline
+  name: 08-checkpoints
+  concurrentBuild: true
+  definition:
+    cpsFlowDefinition:
+      sandbox: true
+      script: |-
+        pipeline {
+            agent none
+            stages {
+                stage('Say Hello') {
+                    agent {
+                        kubernetes {
+                            yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          nodeSelector:
+            workload: agent
+          tolerations:
+          - key: workload
+            operator: Equal
+            value: agent
+            effect: NoSchedule
+          securityContext:
+            fsGroup: 1000
+          containers:
+          - name: curl
+            image: curlimages/curl:8.10.1
+            command:
+            - sleep
+            args:
+            - infinity
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+              limits:
+                cpu: "250m"
+                memory: "256Mi"
+            securityContext:
+              runAsUser: 1000
+        '''
+                        }
+                    }
+                    steps {
+                        echo 'Hello World!'
+                        sleep 5
+                    }
+                }
+                stage('Checkpoint Hello') {
+                    steps {
+                        checkpoint 'Hello'
+                    }
+                }
+                stage('Say Good By') {
+                    agent {
+                        kubernetes {
+                            yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          nodeSelector:
+            workload: agent
+          tolerations:
+          - key: workload
+            operator: Equal
+            value: agent
+            effect: NoSchedule
+          securityContext:
+            fsGroup: 1000
+          containers:
+          - name: curl
+            image: curlimages/curl:8.10.1
+            command:
+            - sleep
+            args:
+            - infinity
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+              limits:
+                cpu: "250m"
+                memory: "256Mi"
+            securityContext:
+              runAsUser: 1000
+        '''
+                        }
+                    }
+                    steps {
+                        echo 'Say Good By'
+                    }
+                }
+                stage('Checkpoint ByBy') {
+                    steps {
+                        checkpoint 'ByBy'
+                    }
+                }
+            }
+        }
+  description: ''
+  disabled: false
+  displayName: 08-checkpoints
+  resumeBlocked: false
+- kind: folder
+  name: RBAC-Folder-dev1-only
+  description: ''
+  displayName: RBAC-Folder-dev1-only
+  filteredRoles:
+  - develop
+  - browse
+  groups:
+  - name: folder-dev1
+    members:
+      users:
+      - dev1
+    roles:
+    - name: develop
+      grantedAt: current
+  properties:
+  - envVars: {}
+  - itemRestrictions:
+      filter: false

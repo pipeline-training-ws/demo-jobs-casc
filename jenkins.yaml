@@ -1,0 +1,82 @@
+configuration-as-code: {
+  }
+credentials:
+  system:
+    domainCredentials:
+    - credentials:
+      - gitHubApp:
+          appID: "${GITHUB_APP_ID}"
+          description: "gh-app"
+          id: "gh-app"
+          privateKey: "${GITHUB_APP_PRIVATE_KEY}"
+          repositoryAccessStrategy: "inferOwner"
+      - usernamePassword:
+          description: "gh-pat"
+          id: "gh-pat"
+          password: "${GITHUB_PAT}"
+          scope: GLOBAL
+          username: "${GITHUB_USERNAME}"
+      - string:
+          description: "gh-pat-key"
+          id: "gh-pat-key"
+          scope: GLOBAL
+          secret: "${GITHUB_APP_PRIVATE_KEY}"
+jenkins:
+  authorizationStrategy: "cloudBeesRoleBasedAccessControl"
+  numExecutors: 0
+  securityRealm: "operationsCenter"
+  systemMessage: "Controller configured using CloudBees CasC v1"
+beekeeper:
+  enabled: true
+  securityWarnings:
+    enabledForCore: true
+    enabledForPlugins: true
+  upgrades:
+    autoDowngradePlugins: false
+    autoUpgradePlugins: true
+globalCloudBeesPipelineTemplateCatalog:
+  catalogs:
+  - branchOrTag: "main"
+    parentName: "/"
+    scm:
+      github:
+        configuredByUrl: true
+        credentialsId: "gh-app"
+        id: "6ea3b918-aba9-4ee7-9ac3-d23466b9942c"
+        repoOwner: "pipeline-training-ws"
+        repository: "template-catalog"
+        repositoryUrl: "https://github.com/pipeline-training-ws/template-catalog.git"
+        traits:
+        - gitHubBranchDiscovery:
+            strategyId: 1
+        - gitHubPullRequestDiscovery:
+            strategyId: 2
+        - gitHubForkDiscovery:
+            strategyId: 2
+            trust: "gitHubTrustPermissions"
+    updateInterval: "1d"
+unclassified:
+  buildDiscarders:
+    configuredBuildDiscarders:
+    - "jobBuildDiscarder"
+    - simpleBuildDiscarder:
+        discarder:
+          logRotator:
+            numToKeepStr: "2"
+  cloudBeesSCMReporting:
+    enabled: true
+  cloudbeesPipelineExplorer:
+    autoPollingEnabled: true
+    autoPollingIntervalSeconds: 5
+    enabled: true
+    pluggableStorageEnabled: false
+    searchMaxIndexSize: 1000
+  gitHubConfiguration:
+    apiRateLimitChecker: ThrottleForNormalize
+  gitHubPluginConfig:
+    configs:
+    - credentialsId: "gh-pat-key"
+      name: "gh"
+    hookUrl: "https://${JENKINS_CONTROLLER_URL}/github-webhook/"
+  location:
+    url: "https://${JENKINS_CONTROLLER_URL}"

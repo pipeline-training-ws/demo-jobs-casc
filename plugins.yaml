@@ -1,0 +1,28 @@
+# Those plugins manually installed (not using a CasC bundle) might not be installable using the exported CasC bundle if they were uploaded instead of installed through the Plugin Manager
+plugins:
+- id: cloudbees-build-strategies-plugin
+- id: cloudbees-casc-client
+- id: cloudbees-casc-items-controller
+- id: cloudbees-github-reporting
+- id: cloudbees-google-cloud-storage-cache
+- id: cloudbees-groovy-view
+- id: cloudbees-hashicorp-vault
+- id: cloudbees-inactive-items
+- id: cloudbees-jenkins-advisor
+- id: cloudbees-monitoring
+- id: cloudbees-nodes-plus
+- id: cloudbees-pipeline-explorer
+- id: cloudbees-s3-cache
+- id: cloudbees-ssh-slaves
+- id: cloudbees-view-creation-filter
+- id: cloudbees-workflow-template
+- id: config-file-provider
+- id: email-ext
+- id: github-branch-source
+- id: infradna-backup
+- id: operations-center-cloud
+- id: operations-center-notification
+- id: pipeline-event-step
+- id: pipeline-utility-steps
+- id: workflow-aggregator
+- id: workflow-cps-checkpoint
