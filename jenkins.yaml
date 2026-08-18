@@ -20,7 +20,7 @@ credentials:
           description: "gh-pat-key"
           id: "gh-pat-key"
           scope: GLOBAL
-          secret: "${GITHUB_APP_PRIVATE_KEY}"
+          secret: "${GITHUB_PAT}"
 jenkins:
   authorizationStrategy: "cloudBeesRoleBasedAccessControl"
   numExecutors: 0
