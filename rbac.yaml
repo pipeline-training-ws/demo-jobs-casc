@@ -89,9 +89,9 @@ roles:
   - hudson.model.View.Read
   name: browse
 serviceAccounts:
-- name: asahjdcfshjdfc
+- name: myserviceaccount
   authentication:
   - type: password
-    id: 73b3509d-fbd7-47b3-b3ea-b1d9e8cec017
+    id: 12345678-1234-1234-1234-123456789012
     description: mytoken
     expiration: '2026-09-17T11:57:03Z'
