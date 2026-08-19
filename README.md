@@ -1,13 +1,13 @@
 # CloudBees CI Controller Setup Guide
 
 This guide walks through configuring a CloudBees CI **managed controller** with the plugins,
-global configuration, credentials, and jobs needed to run the [`pipeline-training-2026`](https://github.com/cloudbees/pipeline-training-2026) workshop
+global configuration, credentials, and jobs needed to run the `pipeline-training-2026` workshop
 labs. It is derived directly from:
 
-- **[`demo-jobs-casc/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/demo-jobs-casc)** — the Configuration-as-Code (CasC) bundle exported from
-  an already-working controller ([`bundle.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/bundle.yaml), [`jenkins.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml), [`plugins.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/plugins.yaml), [`rbac.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/rbac.yaml),
-  [`items.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/items.yaml)).
-- **[`samples/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/samples)** — the four GitHub repositories the jobs actually build against
+- **[`demo-jobs-casc/`](.)** — the Configuration-as-Code (CasC) bundle exported from
+  an already-working controller ([`bundle.yaml`](bundle.yaml), [`jenkins.yaml`](jenkins.yaml), [`plugins.yaml`](plugins.yaml), [`rbac.yaml`](rbac.yaml),
+  [`items.yaml`](items.yaml)).
+- **`samples/`** — the four GitHub repositories the jobs actually build against
   ([`sample-app-helloWorld`](https://github.com/pipeline-training-ws/sample-app-helloWorld), [`template-catalog`](https://github.com/pipeline-training-ws/template-catalog), [`shared-library`](https://github.com/pipeline-training-ws/shared-library), [`pipeline-samples`](https://github.com/pipeline-training-ws/pipeline-samples)).
 
 ---
@@ -42,15 +42,15 @@ Gather/confirm these before touching the controller:
 
 | # | Requirement | Why it's needed | Source |
 | --- | --- | --- | --- |
-| 1 | A CloudBees CI Operations Center with a managed controller provisioned | `securityRealm: operationsCenter` requires a parent OC | [demo-jobs-casc/jenkins.yaml:27](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml#L27) |
-| 2 | A GitHub App installed on the `pipeline-training-ws` org with access to `sample-app-helloWorld`, `template-catalog`, and `shared-library` | Backs the `gh-app` credential used by Multibranch/Org Folder/Template Catalog jobs | [demo-jobs-casc/jenkins.yaml:6-12](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml#L6-L12), [items.yaml](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/items.yaml) |
-| 3 | A GitHub Personal Access Token + username with read access to the same repos | Backs the `gh-pat` / `gh-pat-key` credentials used for plain checkout and the classic GitHub webhook plugin | [demo-jobs-casc/jenkins.yaml:13-23](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml#L13-L23) |
-| 4 | Values available for `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_PAT`, `GITHUB_USERNAME`, `JENKINS_CONTROLLER_URL` | These are referenced as `${VAR}` placeholders throughout `jenkins.yaml`; CasC will fail to resolve credentials/URLs without them | [demo-jobs-casc/jenkins.yaml](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml) (multiple lines) |
+| 1 | A CloudBees CI Operations Center with a managed controller provisioned | `securityRealm: operationsCenter` requires a parent OC | [demo-jobs-casc/jenkins.yaml:27](jenkins.yaml#L27) |
+| 2 | A GitHub App installed on the `pipeline-training-ws` org with access to `sample-app-helloWorld`, `template-catalog`, and `shared-library` | Backs the `gh-app` credential used by Multibranch/Org Folder/Template Catalog jobs | [demo-jobs-casc/jenkins.yaml:6-12](jenkins.yaml#L6-L12), [items.yaml](items.yaml) |
+| 3 | A GitHub Personal Access Token + username with read access to the same repos | Backs the `gh-pat` / `gh-pat-key` credentials used for plain checkout and the classic GitHub webhook plugin | [demo-jobs-casc/jenkins.yaml:13-23](jenkins.yaml#L13-L23) |
+| 4 | Values available for `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_PAT`, `GITHUB_USERNAME`, `JENKINS_CONTROLLER_URL` | These are referenced as `${VAR}` placeholders throughout `jenkins.yaml`; CasC will fail to resolve credentials/URLs without them | [demo-jobs-casc/jenkins.yaml](jenkins.yaml) (multiple lines) |
 | 5 | A Kubernetes cloud already configured on the controller, with a node pool labeled/tolerated for `workload: agent` | 6 of the 9 jobs (`01-pipeline-simple` via the shared library, `06-parallel-samples/*`, `07-crossteam-collaboration-events/*`, `08-checkpoints`) run on `agent { kubernetes { ... } }` pods | see §5 |
-| 6 | A user named `dev1` known to whatever backing identity source the Operations Center's security realm uses | `RBAC-Folder-dev1-only` grants this user the `develop` role; CasC RBAC bindings for unknown users are silently ignored | [demo-jobs-casc/items.yaml:810-817](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/items.yaml#L810-L817) |
+| 6 | A user named `dev1` known to whatever backing identity source the Operations Center's security realm uses | `RBAC-Folder-dev1-only` grants this user the `develop` role; CasC RBAC bindings for unknown users are silently ignored | [demo-jobs-casc/items.yaml:810-817](items.yaml#L810-L817) |
 
-**Not required for the jobs currently in this bundle** (documented in [`samples/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/samples) but not wired into
-any [`items.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/items.yaml) job): `jfrog-user-token` and `jira-user-token` credentials, used only by the
+**Not required for the jobs currently in this bundle** (documented in `samples/` but not wired into
+any [`items.yaml`](items.yaml) job): `jfrog-user-token` and `jira-user-token` credentials, used only by the
 standalone `ci-jfrog-integration` / `ci-jira-integration` samples under
 [`pipeline-samples`](https://github.com/pipeline-training-ws/pipeline-samples). Skip these unless you plan to add those pipelines as jobs yourself.
 
@@ -58,7 +58,7 @@ standalone `ci-jfrog-integration` / `ci-jira-integration` samples under
 
 ## 3. Install the Required Plugins
 
-Source: [`demo-jobs-casc/plugins.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/plugins.yaml). Install via **Manage Jenkins
+Source: [`demo-jobs-casc/plugins.yaml`](plugins.yaml). Install via **Manage Jenkins
 → Plugins**, or let the CasC bundle install them automatically on bundle apply (see §4).
 
 | Plugin ID | Purpose in this bundle |
@@ -76,7 +76,7 @@ Source: [`demo-jobs-casc/plugins.yaml`](https://github.com/cloudbees/pipeline-tr
 | `cloudbees-github-reporting` | `cloudBeesSCMReporting` (GitHub Checks reporting) trait on branch sources |
 | `operations-center-cloud` | Managed controller / Operations Center integration |
 | `operations-center-notification` | OC notification support |
-| `cloudbees-monitoring`, `cloudbees-jenkins-advisor`, `cloudbees-inactive-items`, `cloudbees-nodes-plus`, `cloudbees-groovy-view`, `cloudbees-pipeline-explorer`, `cloudbees-view-creation-filter` | CloudBees platform features enabled globally (see `unclassified.cloudbeesPipelineExplorer` in [`jenkins.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml)) |
+| `cloudbees-monitoring`, `cloudbees-jenkins-advisor`, `cloudbees-inactive-items`, `cloudbees-nodes-plus`, `cloudbees-groovy-view`, `cloudbees-pipeline-explorer`, `cloudbees-view-creation-filter` | CloudBees platform features enabled globally (see `unclassified.cloudbeesPipelineExplorer` in [`jenkins.yaml`](jenkins.yaml)) |
 | `cloudbees-hashicorp-vault`, `cloudbees-google-cloud-storage-cache`, `cloudbees-s3-cache`, `cloudbees-ssh-slaves` | Available CloudBees integrations — not exercised by any job in `items.yaml`, but listed as installed |
 | `config-file-provider` | Config file management (no job in `items.yaml` currently references a managed config file) |
 | `email-ext` | Extended email notifications (not referenced by any job in `items.yaml`) |
@@ -107,7 +107,7 @@ items:  ["items.yaml"]
 1. Make the five environment variables from §2.4 available to the controller (e.g. as Kubernetes
    Secret-backed env vars on the managed controller pod, or via your CasC secrets mechanism) —
    **before** the bundle loads, since `jenkins.yaml` interpolates them at parse time.
-2. In Operations Center, assign this bundle ([`demo-jobs-casc/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/demo-jobs-casc)) to the target managed controller,
+2. In Operations Center, assign this bundle ([`demo-jobs-casc/`](.)) to the target managed controller,
    or place its contents at the Git location your controller is configured to pull CasC bundles
    from.
 3. Trigger a reload:
@@ -139,7 +139,7 @@ available executor.
 
 ### 5.2 Kubernetes cloud — external prerequisite, not in this bundle
 
-[`jenkins.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml) contains **no `clouds:` block**. All pod specs in `items.yaml` use:
+[`jenkins.yaml`](jenkins.yaml) contains **no `clouds:` block**. All pod specs in `items.yaml` use:
 
 ```yaml
 nodeSelector:
@@ -156,7 +156,7 @@ from the Operations Center level in CloudBees CI on Kubernetes, or configured se
 controller), pointing at a cluster with a node pool carrying the `workload: agent` label and
 matching toleration. This guide intentionally does **not** fabricate a `clouds:` CasC snippet,
 since it would require your cluster's API endpoint, namespace, credentials, and Jenkins URL —
-details not present anywhere in [`samples/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/samples) or [`demo-jobs-casc/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/demo-jobs-casc). Confirm this cloud exists and is
+details not present anywhere in `samples/` or [`demo-jobs-casc/`](.). Confirm this cloud exists and is
 healthy (**Manage Jenkins → Clouds**) before running any job beyond `00-HeloWorld`.
 
 ### 5.3 Credentials
@@ -172,7 +172,7 @@ healthy (**Manage Jenkins → Clouds**) before running any job beyond `00-HeloWo
 > `pipeline-training-ws/shared-library@main` via credential `gh-pat`) — see
 > [`sample-app-helloWorld/Jenkinsfile`](https://github.com/pipeline-training-ws/sample-app-helloWorld/blob/main/Jenkinsfile) and
 > [`template-catalog/templates/1-helloWorld-MB/Jenkinsfile`](https://github.com/pipeline-training-ws/template-catalog/blob/main/templates/1-helloWorld-MB/Jenkinsfile). There is **no**
-> `globalLibraries:` block in [`jenkins.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/jenkins.yaml), so no separate "Global Pipeline Library"
+> `globalLibraries:` block in [`jenkins.yaml`](jenkins.yaml), so no separate "Global Pipeline Library"
 > registration step is needed for this workshop's jobs.
 
 ### 5.4 Pipeline Template Catalog registration
@@ -222,14 +222,14 @@ present here are removed.
 | `browse` | Filterable (folder-assignable) | Read-only: `Item.Read`, `Item.Discover`, `Hudson.Read`, `View.Read` |
 | `authenticated`, `anonymous` | Built-in | No custom permissions attached beyond the platform default |
 
-Folder-level binding: `RBAC-Folder-dev1-only` (in [`items.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/items.yaml)) restricts itself to the `develop`
+Folder-level binding: `RBAC-Folder-dev1-only` (in [`items.yaml`](items.yaml)) restricts itself to the `develop`
 and `browse` roles and grants a group `folder-dev1` (containing user `dev1`) the `develop` role,
 `grantedAt: current`. This is what §2 item 6 requires `dev1` to already exist for.
 
-**Excluded from this guide:** [`rbac.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/rbac.yaml) also defines a `serviceAccounts` entry named
+**Excluded from this guide:** [`rbac.yaml`](rbac.yaml) also defines a `serviceAccounts` entry named
 `asahjdcfshjdfc` with a password-type authentication token (description `mytoken`, expiring
 `2026-09-17T11:57:03Z`). It is not referenced by any job, credential, or role binding anywhere in
-[`demo-jobs-casc/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/demo-jobs-casc) or [`samples/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/samples), and its name doesn't follow any naming convention used elsewhere
+[`demo-jobs-casc/`](.) or `samples/`, and its name doesn't follow any naming convention used elsewhere
 in the bundle — it looks like a leftover artifact from manual testing rather than an intentional
 part of this workshop's setup. **This guide does not instruct recreating it.** If it *is*
 intentional, let me know what it's for and I'll add proper setup steps.
@@ -243,11 +243,11 @@ user database, LDAP, SAML, or OAuth realm; it defers entirely to whatever realm 
 Operations Center is configured with. Practical implication: to satisfy prerequisite #6 (user
 `dev1` must exist), create/confirm that user in the **Operations Center's** security realm, not on
 this controller — the specific steps depend on which realm type your Operations Center uses (this
-is not discoverable from [`samples/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/samples) or [`demo-jobs-casc/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/demo-jobs-casc)).
+is not discoverable from `samples/` or [`demo-jobs-casc/`](.)).
 
 ---
 
-## 8. Jobs ([`items.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/items.yaml))
+## 8. Jobs ([`items.yaml`](items.yaml))
 
 `removeStrategy: { rbac: SYNC, items: NONE }` — job removal is **not** synced; deleting an item
 from `items.yaml` will not delete it from the controller on reload.
@@ -390,20 +390,20 @@ the GitHub App installation covers `sample-app-helloWorld` and `template-catalog
 
 These were deliberately left as flagged gaps rather than filled in with assumptions:
 
-1. **[`labs/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/labs) directory** describes an unrelated environment (different org/repo/credential names)
+1. **`labs/` directory** describes an unrelated environment (different org/repo/credential names)
    and was not reconciled with this guide — clarify whether it should be updated, replaced, or
    removed.
 2. **Kubernetes cloud CasC** is not included; §5.2 documents it only as an external prerequisite.
    If you want it added to `jenkins.yaml`, provide the cluster API endpoint, namespace,
    credential, and Jenkins URL to use.
-3. **The `asahjdcfshjdfc` service account** in [`rbac.yaml`](https://github.com/cloudbees/pipeline-training-2026/blob/main/demo-jobs-casc/rbac.yaml) was excluded from the setup steps as an
+3. **The `asahjdcfshjdfc` service account** in [`rbac.yaml`](rbac.yaml) was excluded from the setup steps as an
    apparent test artifact (§6) — confirm whether it should be documented/kept or removed from the
    bundle.
 4. **Environment-variable injection mechanism** for `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`,
    `GITHUB_PAT`, `GITHUB_USERNAME`, `JENKINS_CONTROLLER_URL` is referenced generically in §4 — the
    exact mechanism (Kubernetes Secret, OC bundle env-var UI, secrets directory, etc.) depends on
-   how your specific controller is deployed and wasn't specified in [`demo-jobs-casc/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/demo-jobs-casc) or
-   [`samples/`](https://github.com/cloudbees/pipeline-training-2026/tree/main/samples).
-5. **GitHub App private key files** ([`converted-github-app.pem`](https://github.com/cloudbees/pipeline-training-2026/blob/main/converted-github-app.pem),
-   [`pipeline-ws-2026.2026-08-14.private-key.pem`](https://github.com/cloudbees/pipeline-training-2026/blob/main/pipeline-ws-2026.2026-08-14.private-key.pem)) committed at the project root — flagged as a
+   how your specific controller is deployed and wasn't specified in [`demo-jobs-casc/`](.) or
+   `samples/`.
+5. **GitHub App private key files** (`converted-github-app.pem`,
+   `pipeline-ws-2026.2026-08-14.private-key.pem`) committed at the project root — flagged as a
    possible secrets-handling concern, not something this guide resolves.
